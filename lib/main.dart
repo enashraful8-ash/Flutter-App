@@ -1,51 +1,158 @@
 import 'package:flutter/material.dart';
 
+void main() {
+  runApp(AshStoreApp());
+}
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class AshStoreApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter_native',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      //home: MyHomePage(title: 'Flutter Demo Home Page'),
-      home: RaisedButtonExample(),
+      title: 'Ash Store',
+      theme: ThemeData(primarySwatch: Colors.indigo),
+      home: HomePage(),
     );
   }
 }
 
+class Product {
+  final String name;
+  final int price;
 
-class RaisedButtonExample extends StatelessWidget {
+  Product(this.name, this.price);
+}
 
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<Product> products = [
+    Product("Phone", 15000),
+    Product("Shoes", 2500),
+    Product("Watch", 1200),
+    Product("Bag", 1800),
+  ];
+
+  List<Product> cart = [];
+
+  void addToCart(Product p) {
+    setState(() {
+      cart.add(p);
+    });
+  }
+
+  void removeFromCart(int index) {
+    setState(() {
+      cart.removeAt(index);
+    });
+  }
+
+  int get totalPrice {
+    return cart.fold(0, (sum, item) => sum + item.price);
+  }
+
+  void checkout() {
+    setState(() {
+      cart.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Order placed successfully (Demo)")),
+    );
+  }
+
+  void showCart() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Text("Your Cart", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: cart.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(cart[index].name),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("৳${cart[index].price}"),
+                          IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              removeFromCart(index);
+                              Navigator.pop(context);
+                              showCart();
+                            },
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Text("Total: ৳$totalPrice", style: TextStyle(fontSize: 18)),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: checkout,
+                child: Text("Checkout"),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter_Native'),
+        title: Text("Ash Store"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: showCart,
+          )
+        ],
       ),
-      body: Center(
-        //Fairly easy, just create a RaisedButton, which has been provided by flutter already. Use style options to customize other properties.
-        child: RaisedButton(
-          color: Colors.blue,
-          child: Text('Press Me'),
-          onPressed: (){
-              print('button clicked');
-          }
+      body: Padding(
+        padding: EdgeInsets.all(10),
+        child: GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.8,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final p = products[index];
+            return Card(
+              elevation: 3,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_bag, size: 50, color: Colors.indigo),
+                  SizedBox(height: 10),
+                  Text(p.name, style: TextStyle(fontSize: 18)),
+                  Text("৳${p.price}"),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () => addToCart(p),
+                    child: Text("Add to Cart"),
+                  )
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
